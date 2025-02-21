@@ -32,7 +32,7 @@ public class Integration
                 },
                 settings = new[]
                 {
-                    new { label = "interval", type = "text", required = true, default_value = "10 * * * *" },
+                    new { label = "interval", type = "text", required = true, default_value = "*/5 * * * *" },
                     new
                     {
                         label = "Tech Facts", type = "text", required = true,
