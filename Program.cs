@@ -17,7 +17,7 @@ app.MapGet("/", () => $"Hello World!,{baseUrl}");
 
 app.MapPost("/webhook", async (HttpRequest request) =>
 {
-    Console.WriteLine(request.Body);
+    Console.WriteLine(await request.ReadFromJsonAsync<object>());
 });
 
 app.MapPost("/tick",  async (HttpRequest request, IHttpClientFactory httpClient) =>
