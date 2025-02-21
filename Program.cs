@@ -54,7 +54,7 @@ app.MapPost("/tick",  async (HttpRequest request, IHttpClientFactory httpClient)
         
         Console.WriteLine($"Data posted to telex chaneel: {data.Content.ReadFromJsonAsync<object>()}");
 
-        return Results.Ok(data.Content.ReadFromJsonAsync<object>());
+        return Results.Accepted("",new { Status = "success", Data= data.Content.ReadFromJsonAsync<object>() });
     }
     catch (Exception e)
     {
