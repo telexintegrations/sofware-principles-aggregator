@@ -8,7 +8,7 @@ builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
-var baseUrl = builder.Configuration.GetSection("Telex")["BaseUrl"];
+var baseUrl =  builder.Configuration.AddEnvironmentVariables("BaseUrl");
 
 app.MapGet("/", () => $"Hello World!,{baseUrl}");
 
