@@ -6,9 +6,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHttpClient();
 
+builder.Configuration.AddEnvironmentVariables();
+
+var baseUrl = builder.Configuration["BaseUrl"];
+
 var app = builder.Build();
 
-var baseUrl =  builder.Configuration.AddEnvironmentVariables("BaseUrl");
 
 app.MapGet("/", () => $"Hello World!,{baseUrl}");
 
