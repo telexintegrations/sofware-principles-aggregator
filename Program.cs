@@ -15,7 +15,12 @@ var app = builder.Build();
 
 app.MapGet("/", () => $"Hello World!,{baseUrl}");
 
-app.MapGet("/tick",  async (HttpRequest request, IHttpClientFactory httpClient) =>
+app.MapPost("/webhook", async (HttpRequest request) =>
+{
+    Console.WriteLine(request.Body);
+});
+
+app.MapPost("/tick",  async (HttpRequest request, IHttpClientFactory httpClient) =>
 {
     try
     {

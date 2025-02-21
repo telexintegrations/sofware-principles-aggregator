@@ -22,7 +22,7 @@ public class Integration
                 author = "Gboun Marvellous",
                 website = baseUrl,
                 integration_type = "interval",
-                is_active = false,
+                is_active = true,
                 key_features = new[]
                 {
                     "Scrapping",
