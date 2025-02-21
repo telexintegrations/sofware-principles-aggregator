@@ -22,7 +22,7 @@ app.MapGet("/", () => $"Hello World!,{baseUrl}");
 app.MapPost("/webhook", async (HttpRequest request) =>
 {
     Console.WriteLine($"this enpoint was triggerd");
-    Console.WriteLine(await request.ReadFromJsonAsync<TelexPayloadModel>());
+    Console.WriteLine(await request.ReadFromJsonAsync<object>());
 });
 
 app.MapPost("/tick",  async (HttpRequest request, IHttpClientFactory httpClient) =>
