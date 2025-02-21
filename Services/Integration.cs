@@ -40,7 +40,7 @@ public class Integration
                     }
                 },
                 tick_url = $"{baseUrl}/tick",
-                target_url = ""
+                target_url = $"{baseUrl}/webhook"
             }
         };
         return specs;
