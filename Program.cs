@@ -8,9 +8,13 @@ builder.Services.AddHttpClient();
 
 builder.Configuration.AddEnvironmentVariables();
 
+builder.Services.AddCors();
+
 var baseUrl = builder.Configuration["BaseUrl"];
 
 var app = builder.Build();
+
+app.UseCors((options) => options.AllowAnyHeader().AllowAnyOrigin().AllowAnyMethod());
 
 
 app.MapGet("/", () => $"Hello World!,{baseUrl}");
