@@ -32,11 +32,11 @@ public class Integration
                 },
                 settings = new[]
                 {
-                    new { label = "interval", type = "text", required = true, default_value = "* * * * *" },
+                    new { label = "interval", type = "text", required = true, default_value = "10 * * * *" },
                     new
                     {
                         label = "Tech Facts", type = "text", required = true,
-                        default_value = "Some Random Tech Design Principle"
+                        default_value = ""
                     }
                 },
                 tick_url = $"{baseUrl}/tick",

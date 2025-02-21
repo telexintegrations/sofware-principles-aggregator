@@ -34,9 +34,6 @@ app.MapPost("/tick",  async (HttpRequest request, IHttpClientFactory httpClient)
         if (payload == null)
             return Results.BadRequest("Invalid JSON");
 
-        if (payload == null)
-            return Results.BadRequest("Invalid JSON");
-
         string channelId = payload.ChannelId;
         string returnUrl = payload.ReturnUrl;
 
