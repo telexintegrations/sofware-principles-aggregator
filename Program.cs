@@ -22,7 +22,7 @@ app.MapGet("/", () => $"Hello World!,{baseUrl}");
 app.MapPost("/webhook", async (HttpRequest request) =>
 {
     Console.WriteLine($"this enpoint was triggerd");
-    Console.WriteLine(await request.ReadFromJsonAsync<object>());
+    Console.WriteLine(await request.ReadFromJsonAsync<TelexPayloadModel>());
 });
 
 app.MapPost("/tick",  async (HttpRequest request, IHttpClientFactory httpClient) =>
@@ -49,9 +49,9 @@ app.MapPost("/tick",  async (HttpRequest request, IHttpClientFactory httpClient)
 
         var data= await client.PostAsJsonAsync(returnUrl, testing);
         
-        Console.WriteLine($"Data posted to telex chaneel: {data.Content.ReadFromJsonAsync<object>()}");
+        Console.WriteLine($"Data posted to telex chanel: {data.RequestMessage}, {data.ReasonPhrase}");
 
-        return Results.Accepted("",new { Status = "success", Data= data.Content.ReadFromJsonAsync<object>() });
+        return Results.Accepted("",new { Status = "success", Data= data.ReasonPhrase });
     }
     catch (Exception e)
     {
