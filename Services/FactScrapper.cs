@@ -15,12 +15,12 @@ public class FactScrapper(IConfiguration configuration, IHttpClientFactory httpC
 
     public async Task<Fact> ScrapRandomFact()
     {
-        var scrappingMethods = new List<Func<Task<Fact>>>()
-        {
-            GetRandomGeekforGeekFact,
-            GetRandomMDNFact,
-            GetRandomMediumFact
-        };
+        // var scrappingMethods = new List<Func<Task<Fact>>>()
+        // {
+        //     GetRandomGeekforGeekFact,
+        //     GetRandomMDNFact,
+        //     GetRandomMediumFact
+        // };
 
         // var randomScrappingMethod = scrappingMethods[Random.Next(scrappingMethods.Count)];
         return await GetRandomGeekforGeekFact();
@@ -85,12 +85,17 @@ public class FactScrapper(IConfiguration configuration, IHttpClientFactory httpC
                 return null;
             }
 
-            var summary = await GenerateSummary(content);
+            // var summary = await GenerateSummary(content);
+            //
+            // if (string.IsNullOrEmpty(summary))
+            // {
+            //     summary = preview;
+            // }
 
             return new Fact()
             {
                 Tittle = title,
-                Content = summary,
+                Content = preview,
                 Source = $"GeeksForGeeks ({selectedType})",
                 Url = articleUrl
             };
@@ -137,7 +142,8 @@ public class FactScrapper(IConfiguration configuration, IHttpClientFactory httpC
     
     private  async Task<string> GenerateSummary(string content)
     {
-        var client = new ChatClient(model: "gpt-4", apiKey: OpenAiKey);
+       
+        var client = new ChatClient(model: "gpt-3.5-turbo", apiKey: OpenAiKey);
         
         var completion = await client.CompleteChatAsync($" You are a helpful assistant that creates engaging summaries of technical articles. Include one interesting fun fact from the article if possible.,Please summarize this technical article: {content}. The summary must be 2-3 lines and not more than 50 words");
 
