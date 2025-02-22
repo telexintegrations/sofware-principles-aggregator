@@ -32,10 +32,10 @@ public class Integration
                 },
                 settings = new[]
                 {
-                    new { label = "interval", type = "text", required = true, default_value = "*/5 * * * *" },
+                    new { label = "interval", type = "text", required = true, default_value = "* * * *" },
                 },
                 tick_url = $"{baseUrl}/tick",
-                target_url = $"{baseUrl}/webhook"
+                target_url = $""
             }
         };
         return specs;
