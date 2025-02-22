@@ -10,6 +10,8 @@ builder.Configuration.AddEnvironmentVariables();
 
 builder.Services.AddCors();
 
+builder.Services.AddSingleton<FactScrapper>();
+
 var baseUrl = builder.Configuration["BaseUrl"];
 
 var app = builder.Build();
@@ -26,13 +28,13 @@ app.MapPost("/webhook", async (HttpRequest request) =>
 });
 
 
-app.MapPost("/tick", async (HttpRequest request, IHttpClientFactory httpClient) =>
+app.MapPost("/tick", async (HttpRequest request, IHttpClientFactory httpClient, FactScrapper factScrapper) =>
 {
     Console.WriteLine("Tick endpoint triggered - Starting background task...");
     var payload = await request.ReadFromJsonAsync<TelexPayloadModel>();
     if (payload == null)
         return Results.BadRequest("Invalid JSON");
-    
+
     string channelId = payload.ChannelId;
     string returnUrl = payload.ReturnUrl;
 
@@ -43,11 +45,21 @@ app.MapPost("/tick", async (HttpRequest request, IHttpClientFactory httpClient) 
         {
             var client = httpClient.CreateClient();
 
+            var fact = await factScrapper.ScrapRandomFact();
+
+            var message = $@"
+Title: {fact.Tittle}
+
+Summary: {fact.Content}
+
+Source: {fact.Source}
+    ";
+
             var testing = new TelexWebhookModel()
             {
                 Username = "Tech Fact Aggregator",
                 Status = "success",
-                Message = "Tech Fact is good",
+                Message = message,
                 EventName = "Random Tech Fact"
             };
 
@@ -60,13 +72,10 @@ app.MapPost("/tick", async (HttpRequest request, IHttpClientFactory httpClient) 
         }
     });
 
-    return Results.Accepted("",new { Status = "processing"});
+    return Results.Accepted("", new { Status = "processing" });
 });
 
 
-app.MapGet("/integration.json", () =>
-{
-    return Results.Ok(Integration.GetIntegrationSpecs(baseUrl));
-});
+app.MapGet("/integration.json", () => { return Results.Ok(Integration.GetIntegrationSpecs(baseUrl)); });
 
 app.Run();
