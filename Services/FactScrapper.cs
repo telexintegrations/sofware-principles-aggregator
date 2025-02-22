@@ -1,7 +1,8 @@
-using System.Runtime.CompilerServices;
+using GroqSharp;
 using DevFactsAgregatorIntegration.Models;
+using GroqSharp.Models;
 using HtmlAgilityPack;
-using OpenAI.Chat;
+
 
 namespace DevFactsAgregatorIntegration.Services;
 
@@ -9,21 +10,20 @@ public class FactScrapper(IConfiguration configuration, IHttpClientFactory httpC
 {
     private static readonly Random Random = new();
     private readonly string GeekForGeekUrl = configuration["GeekForGeekUrl"] ?? throw new ArgumentNullException("GeekForGeekUrl is missing in config");
-    private readonly string MediumUrl = configuration["MediumUrl"] ?? throw new ArgumentNullException("MediumUrl is missing in config");
     private readonly string MdnUrl = configuration["MdnUrl"] ?? throw new ArgumentNullException("MdnUrl is missing in config");
     private readonly string OpenAiKey= configuration["OpenAiKey"] ?? throw new ArgumentNullException("OpenAiKey is Missiing in config");
 
     public async Task<Fact> ScrapRandomFact()
     {
-        // var scrappingMethods = new List<Func<Task<Fact>>>()
-        // {
-        //     GetRandomGeekforGeekFact,
-        //     GetRandomMDNFact,
-        //     GetRandomMediumFact
-        // };
+        var scrappingMethods = new List<Func<Task<Fact>>>()
+        {
+            GetRandomGeekforGeekFact,
+            GetRandomMDNFact
+        };
 
-        // var randomScrappingMethod = scrappingMethods[Random.Next(scrappingMethods.Count)];
-        return await GetRandomGeekforGeekFact();
+        var randomScrappingMethod = scrappingMethods[Random.Next(scrappingMethods.Count)];
+
+        return await randomScrappingMethod();
     }
 
     private  async Task<Fact> GetRandomGeekforGeekFact()
@@ -85,17 +85,21 @@ public class FactScrapper(IConfiguration configuration, IHttpClientFactory httpC
                 return null;
             }
 
-            // var summary = await GenerateSummary(content);
-            //
-            // if (string.IsNullOrEmpty(summary))
-            // {
-            //     summary = preview;
-            // }
+            var summary = await GenerateSummary(content);
+            
+            if (string.IsNullOrEmpty(summary))
+            {
+                summary = preview;
+            }
+            
+            Console.WriteLine($"contnet:{content}");
+            Console.WriteLine($"summary:{summary}");
+            Console.WriteLine($"preview:{preview}");
 
             return new Fact()
             {
                 Tittle = title,
-                Content = preview,
+                Content = summary,
                 Source = $"GeeksForGeeks ({selectedType})",
                 Url = articleUrl
             };
@@ -109,27 +113,67 @@ public class FactScrapper(IConfiguration configuration, IHttpClientFactory httpC
 
     private async Task<Fact> GetRandomMDNFact()
     {
-        var document = await LoadHtmlDocument(MdnUrl);
-        return new Fact()
+        try
         {
-            Tittle = "Testing Fact",
-            Content = "Test Content",
-            Source = "MDN",
-            Url = MdnUrl
-        };
-    }
+            Console.WriteLine("Fetching featured articles from MDN");
+        
+            var document = await LoadHtmlDocument(MdnUrl);
+            var articleNodes = document.DocumentNode.SelectNodes("//div[@class='tile-container']/div[@class='article-tile']");
+        
+            if (articleNodes == null || !articleNodes.Any())
+            {
+                Console.WriteLine("No articles found on MDN");
+                return null;
+            }
 
-    private async Task<Fact> GetRandomMediumFact()
-    {
-        var document = await LoadHtmlDocument(MediumUrl);
-        return new Fact()
+            Console.WriteLine($"Found {articleNodes.Count} featured articles");
+        
+            var randomArticle = articleNodes[Random.Next(articleNodes.Count)];
+        
+            var titleNode = randomArticle.SelectSingleNode(".//h3[@class='tile-title']/a");
+            var articleUrl = titleNode?.GetAttributeValue("href", "");
+            var title = titleNode?.InnerText.Trim();
+            var preview = randomArticle.SelectSingleNode(".//p")?.InnerText.Trim();
+
+            if (string.IsNullOrEmpty(title) || string.IsNullOrEmpty(articleUrl))
+            {
+                Console.WriteLine("Could not find article title or URL");
+                return null;
+            }
+
+            // var fullArticleUrl = new Uri(new Uri(MdnUrl), articleUrl).ToString();
+            var fullArticleUrl = new Uri(new Uri(MdnUrl), articleUrl.TrimStart('/')).ToString();
+
+            var articleDoc = await LoadHtmlDocument(fullArticleUrl);
+            var contentNode = articleDoc.DocumentNode.SelectSingleNode("//div[@class='section-content']");
+            var content = contentNode != null ? contentNode.InnerText.Trim() : preview;
+            
+            
+            var summary = await GenerateSummary(content);
+            
+            if (string.IsNullOrEmpty(summary))
+            {
+                summary = content;
+            }
+            
+            Console.WriteLine($"contnet:{content}");
+            Console.WriteLine($"summary:{summary}");
+
+            return new Fact()
+            {
+                Tittle = title,
+                Content = summary,
+                Source = "MDN Featured Articles",
+                Url = fullArticleUrl
+            };
+        }
+        catch (Exception ex)
         {
-            Tittle = "Testing Fact",
-            Content = "Test Content",
-            Source = "Medium",
-            Url = MediumUrl
-        };
+            Console.WriteLine($"Error scraping MDN: {ex.Message}");
+            return null;
+        }
     }
+    
 
     private async Task<HtmlDocument> LoadHtmlDocument(string url)
     {
@@ -142,11 +186,24 @@ public class FactScrapper(IConfiguration configuration, IHttpClientFactory httpC
     
     private  async Task<string> GenerateSummary(string content)
     {
-       
-        var client = new ChatClient(model: "gpt-3.5-turbo", apiKey: OpenAiKey);
-        
-        var completion = await client.CompleteChatAsync($" You are a helpful assistant that creates engaging summaries of technical articles. Include one interesting fun fact from the article if possible.,Please summarize this technical article: {content}. The summary must be 2-3 lines and not more than 50 words");
+            try
+            {
+                var apiModel = "mixtral-8x7b-32768";
+                var client = new GroqClient(OpenAiKey, apiModel).SetTemperature(0.5).SetMaxTokens(512).SetTopP(1).SetStop("NONE").SetStructuredRetryPolicy(2);
+                var messages = new Message
+                {
+                    Content =
+                        $"system You are a helpful assistant that summarizes technical articles concisely. Summarize this technical article in a few sentences: {content}"
+                };
+                var response = await client.CreateChatCompletionAsync(messages);
 
-        return completion.Value.Content[0].Text;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error generating summary: {ex.Message}");
+                return null;
+            }
+        
     }
 }
