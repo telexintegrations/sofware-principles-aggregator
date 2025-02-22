@@ -25,41 +25,84 @@ app.MapPost("/webhook", async (HttpRequest request) =>
     Console.WriteLine(await request.ReadFromJsonAsync<object>());
 });
 
-app.MapPost("/tick",  async (HttpRequest request, IHttpClientFactory httpClient) =>
+
+app.MapPost("/tick", (HttpRequest request, IHttpClientFactory httpClient) =>
 {
-    try
+    Console.WriteLine("Tick endpoint triggered - Starting background task...");
+    _ = Task.Run(async () =>
     {
-        var client = httpClient.CreateClient();
-        var payload = await request.ReadFromJsonAsync<TelexPayloadModel>();
-        if (payload == null)
-            return Results.BadRequest("Invalid JSON");
-
-        string channelId = payload.ChannelId;
-        string returnUrl = payload.ReturnUrl;
-
-        Console.WriteLine($"Tick Received: {channelId}, {returnUrl}");
-
-        var testing = new TelexWebhookModel()
+        try
         {
-            Username = "Tech Fact Aggregator",
-            Status = "success",
-            Message = "Tech Fact is good",
-            EventName = "Random Tech Fact"
-        };
+            var client = httpClient.CreateClient();
+            
+            var payload = await request.ReadFromJsonAsync<TelexPayloadModel>();
+            if (payload == null)
+            {
+                Console.WriteLine("Invalid JSON payload");;
+                return;
+            }
 
-        var data= await client.PostAsJsonAsync(returnUrl, testing);
-        
-        Console.WriteLine($"Data posted to telex chanel: {data.RequestMessage}, {data.ReasonPhrase}");
+            string channelId = payload.ChannelId;
+            string returnUrl = payload.ReturnUrl;
 
-        return Results.Accepted("",new { Status = "success", Data= data.ReasonPhrase });
-    }
-    catch (Exception e)
-    {
-        Console.WriteLine(e);
-        throw;
-    }
-    
+            Console.WriteLine($"Tick Received - Channel ID: {channelId}, Return URL: {returnUrl}");
+
+            var testing = new TelexWebhookModel()
+            {
+                Username = "Tech Fact Aggregator",
+                Status = "success",
+                Message = "Tech Fact is good",
+                EventName = "Random Tech Fact"
+            };
+
+            var response = await client.PostAsJsonAsync(returnUrl, testing);
+            Console.WriteLine($"Data posted to telex channel - Status: {response.StatusCode}");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Error in background task: {e}");
+        }
+    });
+
+    return Results.Accepted("",new { Status = "processing"});
 });
+
+
+// app.MapPost("/tick",  async (HttpRequest request, IHttpClientFactory httpClient) =>
+// {
+//     try
+//     {
+//         var client = httpClient.CreateClient();
+//         var payload = await request.ReadFromJsonAsync<TelexPayloadModel>();
+//         if (payload == null)
+//             return Results.BadRequest("Invalid JSON");
+//
+//         string channelId = payload.ChannelId;
+//         string returnUrl = payload.ReturnUrl;
+//
+//         Console.WriteLine($"Tick Received: {channelId}, {returnUrl}");
+//
+//         var testing = new TelexWebhookModel()
+//         {
+//             Username = "Tech Fact Aggregator",
+//             Status = "success",
+//             Message = "Tech Fact is good",
+//             EventName = "Random Tech Fact"
+//         };
+//
+//         var data= await client.PostAsJsonAsync(returnUrl, testing);
+//         
+//         Console.WriteLine($"Data posted to telex chanel: {data.RequestMessage}, {data.ReasonPhrase}");
+//
+//         return Results.Accepted("",new { Status = "success", Data= data.ReasonPhrase });
+//     }
+//     catch (Exception e)
+//     {
+//         Console.WriteLine(e);
+//         throw;
+//     }
+//     
+// });
 
 app.MapGet("/integration.json", () =>
 {
