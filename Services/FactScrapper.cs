@@ -189,7 +189,7 @@ public class FactScrapper(IConfiguration configuration, IHttpClientFactory httpC
             try
             {
                 var apiModel = "mixtral-8x7b-32768";
-                var client = new GroqClient(OpenAiKey, apiModel).SetTemperature(0.5).SetMaxTokens(512).SetTopP(1).SetStop("NONE").SetStructuredRetryPolicy(2);
+                var client = new GroqClient(OpenAiKey, apiModel).SetTemperature(0.5).SetMaxTokens(1000).SetTopP(1).SetStop("NONE").SetStructuredRetryPolicy(2);
                 var messages = new Message
                 {
                     Content =
