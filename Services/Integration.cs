@@ -22,7 +22,7 @@ public class Integration
                 author = "Gboun Marvellous",
                 website = baseUrl,
                 integration_type = "interval",
-                is_active = true,
+                // is_active = true,
                 key_features = new[]
                 {
                     "Scrapping",
@@ -34,8 +34,8 @@ public class Integration
                 {
                     new { label = "interval", type = "text", required = true, default_value = "*/3 * * * *" },
                 },
-                tick_url = $"{baseUrl}/tick",
-                target_url = $"{baseUrl}/webhook"
+                target_url = $"{baseUrl}/webhook",
+                tick_url = $"{baseUrl}/tick"
             }
         };
         return specs;

@@ -30,7 +30,7 @@ better-submitter/
 │   └── TelexPayload.cs
 ├── Services/
 │   ├── FactScraper.cs
-│   └── integration.json
+│   └── Integration.cs
 ├── Properties/
 │   └── launchSettings.json
 ├── Program.cs
@@ -44,6 +44,42 @@ better-submitter/
 - `Models`: Contains data models like `Fact`.
 - `Services`: Contains service classes for scraping and integration.
 - `Program.cs`: The startup point of the application.
+## Setup Instructions
+
+### Prerequisites
+- [.NET SDK 9.0 or higher](https://dotnet.microsoft.com/download/dotnet) should be installed.
+- A code editor such as [Visual Studio Code](https://code.visualstudio.com/) is recommended.
+
+### Running Locally
+```bash
+      1. Clone the repository to your local machine:
+         `git clone https://github.com/telexintegrations/sofware-principles-aggregator.git`
+         `cd sofware-principles-aggregator`
+      
+      2. Restore project dependencies:
+         `dotnet restore`
+      
+      3. Run the application locally:
+         `dotnet run`
+      
+         This will run the API on your local machine. By default, it will be accessible at `http://localhost:5198`.
+      
+      4. Test the API and get the integraion by sending a GET request to the following endpoint:
+         `http://localhost:5198/integration.json`
+```
+## API Documentation
+
+### Endpoint: `GET /base-url/integration.json`
+This endpoint returns the integration specs
+Status Code 200
+
+### Endpoint: `POST /base-url/tick`
+This endpoint to be called by telex
+Status Code 202
+
+### Endpoint: `POST /base-url/webhook`
+This an optional enpoint added to get data from the telex channel if need be
+Status Code 200
 
 ## Implementation Details
 
